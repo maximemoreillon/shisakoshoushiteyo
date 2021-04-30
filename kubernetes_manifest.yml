@@ -14,12 +14,10 @@ spec:
     spec:
       containers:
       - name: ${APPLICATION_NAME}
-        image: ${CONTAINER_REGISTRY}/${APPLICATION_NAME}
+        image: ${DOCKER_IMAGE}
         imagePullPolicy: Always # Ensure the latest version is pulled
         ports:
         - containerPort: 80
-      imagePullSecrets:
-      - name: registry-credentials # Used to log in the registry
 ---
 apiVersion: v1
 kind: Service

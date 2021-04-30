@@ -5,19 +5,25 @@ stages:
 
 variables:
   APPLICATION_NAME: shisakoshou
+  DOCKER_IMAGE: ${DOCKER_HUB_USERNAME}/${APPLICATION_NAME}
   CERTIFICATE_DOMAIN: shisakoshou.maximemoreillon.com
 
 containerization:
   stage: containerization
+  tags:
+    - moreillon
   script:
-    - docker build -t ${CONTAINER_REGISTRY}/${APPLICATION_NAME} .
-    - docker push ${CONTAINER_REGISTRY}/${APPLICATION_NAME}
-    - docker image rm ${CONTAINER_REGISTRY}/${APPLICATION_NAME}
+    - echo "${DOCKER_HUB_PASSWORD}" | docker login --username ${DOCKER_HUB_USERNAME} --password-stdin
+    - docker build -t ${DOCKER_IMAGE} .
+    - docker push ${DOCKER_IMAGE}
+    - docker image rm ${DOCKER_IMAGE}
 
 deployment:
   stage: deployment
+  tags:
+    - moreillon
   script:
-    - envsubst < deployment.yml | kubectl apply -f -
+    - envsubst < kubernetes_manifest.yml | kubectl apply -f -
     - kubectl rollout restart deployment/${APPLICATION_NAME}
   environment:
     name: production
