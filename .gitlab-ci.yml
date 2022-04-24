@@ -2,29 +2,35 @@ stages:
   - containerization
   - deployment
 
+image: moreillon/ci-dind
+services:
+  - name: docker:19.03.12-dind
+
 
 variables:
   APPLICATION_NAME: shisakoshou
-  DOCKER_IMAGE: ${DOCKER_HUB_USERNAME}/${APPLICATION_NAME}
-  CERTIFICATE_DOMAIN: shisakoshou.maximemoreillon.com
+  CONTAINER_IMAGE: ${DOCKER_HUB_USERNAME}/${APPLICATION_NAME}
+  CONTAINER_IMAGE_TAGGED: ${CONTAINER_IMAGE::${CI_COMMIT_SHORT_SHA}
+  K8S_INGRESS_HOST: shisakoshou.home.maximemoreillon.com
 
 containerization:
   stage: containerization
   tags:
-    - moreillon
-  script:
+    - dind
+  before_script:
     - echo "${DOCKER_HUB_PASSWORD}" | docker login --username ${DOCKER_HUB_USERNAME} --password-stdin
-    - docker build -t ${DOCKER_IMAGE} .
-    - docker push ${DOCKER_IMAGE}
-    - docker image rm ${DOCKER_IMAGE}
+  script:
+    - docker build -t ${CONTAINER_IMAGE} .
+    - docker tag ${CONTAINER_IMAGE} ${CONTAINER_IMAGE_TAGGED}
+    - docker push ${CONTAINER_IMAGE}
+    - docker push ${CONTAINER_IMAGE_TAGGED}
 
 deployment:
   stage: deployment
   tags:
-    - moreillon
+    - dind
   script:
     - envsubst < kubernetes_manifest.yml | kubectl apply -f -
-    - kubectl rollout restart deployment/${APPLICATION_NAME}
   environment:
     name: production
     kubernetes:

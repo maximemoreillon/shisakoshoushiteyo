@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
       - name: ${APPLICATION_NAME}
-        image: ${DOCKER_IMAGE}
-        imagePullPolicy: Always # Ensure the latest version is pulled
+        image: ${CONTAINER_IMAGE_TAGGED}
         ports:
         - containerPort: 80
 ---
@@ -40,10 +39,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - ${CERTIFICATE_DOMAIN}
+    - ${K8S_INGRESS_HOST}
     secretName: ${APPLICATION_NAME} # Name of the secret, i.e. the certificates
   rules:
-  - host: ${CERTIFICATE_DOMAIN}
+  - host: ${K8S_INGRESS_HOST}
     http:
       paths:
       - path: /
